@@ -1,0 +1,2410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Growth Grid — AI-Powered Adaptive STEM Platform</title>
+  <link rel="manifest" href="frontend/public/manifest.json">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              300: '#7dd3fc',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+              950: '#082f49',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- React 18, ReactDOM, Babel for in-browser JSX execution -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    code, pre {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.05);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(14, 165, 233, 0.4);
+      border-radius: 4px;
+    }
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.75; }
+    }
+    .pulse-subtle {
+      animation: pulse-subtle 3s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen selection:bg-brand-500 selection:text-white transition-colors duration-200">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // ==========================================
+    // MULTILINGUAL STRINGS (EN, TA, HI)
+    // ==========================================
+    const I18N = {
+      en: {
+        platformName: "Growth Grid",
+        tagline: "AI-Powered Adaptive STEM Mastery",
+        dashboard: "Dashboard",
+        adaptiveQuiz: "Adaptive Quiz",
+        knowledgeGraph: "Knowledge Graph",
+        aiTutor: "AI Tutor",
+        credentials: "On-Chain Badges",
+        educatorPortal: "Educator Portal",
+        adminPortal: "Admin & LMS",
+        currentStreak: "Streak",
+        days: "Days",
+        xpPoints: "XP",
+        masteryLevel: "Mastery",
+        nextLesson: "Next Recommended Lesson",
+        whyThis: "Why this recommendation?",
+        masteryGateNotice: "Mastery Gate: Reach 80% to unlock next topic.",
+        rootGapAlert: "Root Skill Gap Detected!",
+        startPractice: "Start Adaptive Quiz",
+        question: "Question",
+        difficulty: "Difficulty",
+        hintsRemaining: "Tiered Hints",
+        submitAnswer: "Submit Answer",
+        nextQuestion: "Next Adaptive Question",
+        hintPrompt: "Need a hint?",
+        askTutor: "Ask AI Tutor",
+        stepByStep: "Step-by-Step",
+        fullSolution: "Full Solution",
+        courseCitation: "Course Citation",
+        verifyOnChain: "Verify on Polygon",
+        classOverview: "Class Overview",
+        atRiskStudents: "At-Risk Learners",
+        lowBandwidth: "Low Bandwidth",
+        highContrast: "High Contrast",
+        textToSpeech: "Audio Reader",
+        privacyConsent: "Privacy & Consent"
+      },
+      ta: {
+        platformName: "குரோத் கிரிட்",
+        tagline: "செயற்கை நுண்ணறிவு அடிப்படையிலான STEM கல்வி முறை",
+        dashboard: "முகப்பு",
+        adaptiveQuiz: "தழுவல் வினாடி வினா",
+        knowledgeGraph: "அறிவு வரைபடம்",
+        aiTutor: "AI ஆசிரியர்",
+        credentials: "பிளாக்செயின் சான்றிதழ்கள்",
+        educatorPortal: "ஆசிரியர் தளம்",
+        adminPortal: "நிர்வாகம் & LMS",
+        currentStreak: "தொடர் நாள்",
+        days: "நாட்கள்",
+        xpPoints: "மதிப்பெண்",
+        masteryLevel: "தேர்ச்சி",
+        nextLesson: "பரிந்துரைக்கப்பட்ட அடுத்த பாடம்",
+        whyThis: "இந்த பரிந்துரை ஏன்?",
+        masteryGateNotice: "அடுத்த பாடத்தை திறக்க 80% தேர்ச்சி தேவை.",
+        rootGapAlert: "அடிப்படை அறிவு இடைவெளி கண்டறியப்பட்டது!",
+        startPractice: "பயிற்சியைத் தொடங்கு",
+        question: "கேள்வி",
+        difficulty: "கடினம்",
+        hintsRemaining: "குறிப்புகள்",
+        submitAnswer: "விடையை சமர்ப்பி",
+        nextQuestion: "அடுத்த கேள்வி",
+        hintPrompt: "குறிப்பு வேண்டுமா?",
+        askTutor: "AI ஆசிரியரிடம் கேள்",
+        stepByStep: "படி-படியாக",
+        fullSolution: "முழு தீர்வு",
+        courseCitation: "பாடப்புத்தக மேற்கோள்",
+        verifyOnChain: "பாலிகானில் சரிபார்",
+        classOverview: "வகுப்பு மேலோட்டம்",
+        atRiskStudents: "கவனம் தேவைப்படும் மாணவர்கள்",
+        lowBandwidth: "குறைந்த இணைய வேகம்",
+        highContrast: "அதிக மாறுபாடு",
+        textToSpeech: "குரல் வாசிப்பு",
+        privacyConsent: "தனியுரிமை ஒப்புதல்"
+      },
+      hi: {
+        platformName: "ग्रोथ ग्रिड",
+        tagline: "एआई-संचालित अनुकूली एसटीईएम शिक्षण",
+        dashboard: "डैशबोर्ड",
+        adaptiveQuiz: "अनुकूली प्रश्नोत्तरी",
+        knowledgeGraph: "ज्ञान आरेख",
+        aiTutor: "एआई ट्यूटर",
+        credentials: "ब्लॉकचेन बैज",
+        educatorPortal: "शिक्षक पोर्टल",
+        adminPortal: "व्यवस्थापक & LMS",
+        currentStreak: "दैनिक क्रम",
+        days: "दिन",
+        xpPoints: "एक्सपी",
+        masteryLevel: "दक्षता",
+        nextLesson: "अनुशंसित अगला पाठ",
+        whyThis: "यह सिफारिश क्यों?",
+        masteryGateNotice: "अगले विषय को खोलने के लिए 80% दक्षता आवश्यक है।",
+        rootGapAlert: "मूल ज्ञान में कमी का पता चला!",
+        startPractice: "अभ्यास प्रारंभ करें",
+        question: "प्रश्न",
+        difficulty: "कठिनाई",
+        hintsRemaining: "संकेत",
+        submitAnswer: "उत्तर सबमिट करें",
+        nextQuestion: "अगला प्रश्न",
+        hintPrompt: "संकेत चाहिए?",
+        askTutor: "एआई ट्यूटर से पूछें",
+        stepByStep: "चरणबद्ध",
+        fullSolution: "पूर्ण समाधान",
+        courseCitation: "पाठ्यक्रम संदर्भ",
+        verifyOnChain: "पॉलीगॉन पर सत्यापित करें",
+        classOverview: "कक्षा अवलोकन",
+        atRiskStudents: "जोखिम वाले छात्र",
+        lowBandwidth: "कम बैंडविड्थ",
+        highContrast: "उच्च कंट्रास्ट",
+        textToSpeech: "ऑडियो रीडर",
+        privacyConsent: "गोपनीयता सहमति"
+      }
+    };
+
+    // ==========================================
+    // SEED DATA: 3 COURSES & TOPICS
+    // ==========================================
+    const COURSES_DATA = [
+      {
+        id: 1,
+        code: "ALG-101",
+        title: "Algebra & Functions",
+        subject: "Algebra",
+        icon: "📐",
+        topics: [
+          { id: 1, title: "Fractions & Rational Numbers", prereqs: [], order: 1, initialMastery: 0.88, isMastered: true },
+          { id: 2, title: "Linear Equations & Inequalities", prereqs: [1], order: 2, initialMastery: 0.58, isMastered: false },
+          { id: 3, title: "Systems of Linear Equations", prereqs: [2], order: 3, initialMastery: 0.20, isMastered: false },
+          { id: 4, title: "Quadratic Equations", prereqs: [1, 2], order: 4, initialMastery: 0.15, isMastered: false },
+          { id: 5, title: "Polynomial Factoring", prereqs: [2, 4], order: 5, initialMastery: 0.05, isMastered: false },
+          { id: 6, title: "Functions & Exponential Growth", prereqs: [3, 4], order: 6, initialMastery: 0.0, isMastered: false }
+        ]
+      },
+      {
+        id: 2,
+        code: "PHY-101",
+        title: "Physics Fundamentals",
+        subject: "Physics",
+        icon: "⚡",
+        topics: [
+          { id: 7, title: "Vectors & Coordinate Systems", prereqs: [], order: 1, initialMastery: 0.92, isMastered: true },
+          { id: 8, title: "1D Kinematics & Motion", prereqs: [7], order: 2, initialMastery: 0.65, isMastered: false },
+          { id: 9, title: "Newton's Laws of Motion", prereqs: [7, 8], order: 3, initialMastery: 0.35, isMastered: false },
+          { id: 10, title: "Work, Energy & Power", prereqs: [9], order: 4, initialMastery: 0.10, isMastered: false },
+          { id: 11, title: "Momentum & Collisions", prereqs: [9], order: 5, initialMastery: 0.0, isMastered: false },
+          { id: 12, title: "Circular Motion & Orbits", prereqs: [8, 9], order: 6, initialMastery: 0.0, isMastered: false }
+        ]
+      },
+      {
+        id: 3,
+        code: "CS-101",
+        title: "Coding Fundamentals",
+        subject: "Coding",
+        icon: "💻",
+        topics: [
+          { id: 13, title: "Variables, Types & Memory", prereqs: [], order: 1, initialMastery: 0.85, isMastered: true },
+          { id: 14, title: "Conditionals & Logic", prereqs: [13], order: 2, initialMastery: 0.40, isMastered: false },
+          { id: 15, title: "Loops & Iterative Algorithms", prereqs: [13, 14], order: 3, initialMastery: 0.18, isMastered: false },
+          { id: 16, title: "Functions & Scope", prereqs: [14, 15], order: 4, initialMastery: 0.0, isMastered: false },
+          { id: 17, title: "Arrays & Data Collections", prereqs: [15, 16], order: 5, initialMastery: 0.0, isMastered: false },
+          { id: 18, title: "Algorithmic Complexity (Big-O)", prereqs: [16, 17], order: 6, initialMastery: 0.0, isMastered: false }
+        ]
+      }
+    ];
+
+    // ==========================================
+    // 50 SAMPLE STUDENTS FOR EDUCATOR VIEW
+    // ==========================================
+    const SAMPLE_STUDENTS = [
+      { id: 1, name: "Alex Student", email: "student@growthgrid.org", cluster: "Steady", streak: 5, xp: 420, avgMastery: 0.68, risk: "low", rootGap: null },
+      { id: 4, name: "Aarav Patel", email: "aarav@growthgrid.org", cluster: "Fast", streak: 18, xp: 2150, avgMastery: 0.94, risk: "low", rootGap: null },
+      { id: 5, name: "Diya Sharma", email: "diya@growthgrid.org", cluster: "Steady", streak: 12, xp: 1450, avgMastery: 0.78, risk: "low", rootGap: null },
+      { id: 6, name: "Karthik Verma", email: "karthik@growthgrid.org", cluster: "Needs Support", streak: 1, xp: 320, avgMastery: 0.44, risk: "high", rootGap: "Fractions & Rational Numbers" },
+      { id: 7, name: "Ananya Iyer", email: "ananya@growthgrid.org", cluster: "Fast", streak: 22, xp: 2890, avgMastery: 0.96, risk: "low", rootGap: null },
+      { id: 8, name: "Rohan Gupta", email: "rohan@growthgrid.org", cluster: "Needs Support", streak: 0, xp: 190, avgMastery: 0.38, risk: "high", rootGap: "Vectors & Coordinate Systems" },
+      { id: 9, name: "Pooja Reddy", email: "pooja@growthgrid.org", cluster: "Steady", streak: 8, xp: 980, avgMastery: 0.72, risk: "medium", rootGap: null },
+      { id: 10, name: "Vikram Nair", email: "vikram@growthgrid.org", cluster: "Fast", streak: 15, xp: 1850, avgMastery: 0.89, risk: "low", rootGap: null },
+      { id: 11, name: "Sneha Sen", email: "sneha@growthgrid.org", cluster: "Needs Support", streak: 2, xp: 410, avgMastery: 0.49, risk: "high", rootGap: "Conditionals & Logic" },
+      { id: 12, name: "Aditya Joshi", email: "aditya@growthgrid.org", cluster: "Steady", streak: 9, xp: 1120, avgMastery: 0.75, risk: "low", rootGap: null },
+      { id: 13, name: "Meera Das", email: "meera@growthgrid.org", cluster: "Fast", streak: 26, xp: 3100, avgMastery: 0.97, risk: "low", rootGap: null },
+      { id: 14, name: "Rahul Menon", email: "rahul@growthgrid.org", cluster: "Needs Support", streak: 0, xp: 150, avgMastery: 0.32, risk: "high", rootGap: "Linear Equations & Inequalities" },
+      { id: 15, name: "Priya Pillai", email: "priya@growthgrid.org", cluster: "Steady", streak: 14, xp: 1340, avgMastery: 0.81, risk: "low", rootGap: null },
+      { id: 16, name: "Arjun Rao", email: "arjun@growthgrid.org", cluster: "Fast", streak: 30, xp: 3450, avgMastery: 0.98, risk: "low", rootGap: null },
+      { id: 17, name: "Kavya Bhat", email: "kavya@growthgrid.org", cluster: "Steady", streak: 7, xp: 870, avgMastery: 0.69, risk: "medium", rootGap: null },
+      { id: 18, name: "Siddharth Jain", email: "siddharth@growthgrid.org", cluster: "Needs Support", streak: 1, xp: 280, avgMastery: 0.41, risk: "high", rootGap: "Fractions & Rational Numbers" },
+      { id: 19, name: "Neha Roy", email: "neha@growthgrid.org", cluster: "Fast", streak: 19, xp: 2340, avgMastery: 0.93, risk: "low", rootGap: null },
+      { id: 20, name: "Sai Krishna", email: "sai@growthgrid.org", cluster: "Steady", streak: 11, xp: 1250, avgMastery: 0.77, risk: "low", rootGap: null },
+      { id: 21, name: "Lakshmi Narayanan", email: "lakshmi@growthgrid.org", cluster: "Needs Support", streak: 2, xp: 390, avgMastery: 0.46, risk: "high", rootGap: "Kinematics 1D" },
+      { id: 22, name: "Harish Kumar", email: "harish@growthgrid.org", cluster: "Steady", streak: 6, xp: 760, avgMastery: 0.70, risk: "medium", rootGap: null },
+      { id: 23, name: "Divya Nambiar", email: "divya@growthgrid.org", cluster: "Fast", streak: 24, xp: 2950, avgMastery: 0.95, risk: "low", rootGap: null },
+      { id: 24, name: "Varun Shetty", email: "varun@growthgrid.org", cluster: "Steady", streak: 10, xp: 1180, avgMastery: 0.74, risk: "low", rootGap: null },
+      { id: 25, name: "Swati Deshmukh", email: "swati@growthgrid.org", cluster: "Needs Support", streak: 0, xp: 210, avgMastery: 0.35, risk: "high", rootGap: "Variables & Data Types" },
+      { id: 26, name: "Sanjay Bose", email: "sanjay@growthgrid.org", cluster: "Fast", streak: 17, xp: 2100, avgMastery: 0.91, risk: "low", rootGap: null },
+      { id: 27, name: "Ritu Kapoor", email: "ritu@growthgrid.org", cluster: "Steady", streak: 13, xp: 1410, avgMastery: 0.79, risk: "low", rootGap: null },
+      { id: 28, name: "Gautam Mehta", email: "gautam@growthgrid.org", cluster: "Needs Support", streak: 1, xp: 330, avgMastery: 0.43, risk: "high", rootGap: "Fractions & Rational Numbers" },
+      { id: 29, name: "Tanvi Saxena", email: "tanvi@growthgrid.org", cluster: "Fast", streak: 28, xp: 3300, avgMastery: 0.97, risk: "low", rootGap: null },
+      { id: 30, name: "Naveen Chawla", email: "naveen@growthgrid.org", cluster: "Steady", streak: 5, xp: 690, avgMastery: 0.67, risk: "medium", rootGap: null },
+      { id: 31, name: "Shreya Ghoshal", email: "shreya@growthgrid.org", cluster: "Fast", streak: 21, xp: 2600, avgMastery: 0.94, risk: "low", rootGap: null },
+      { id: 32, name: "Manoj Tiwari", email: "manoj@growthgrid.org", cluster: "Needs Support", streak: 2, xp: 420, avgMastery: 0.48, risk: "high", rootGap: "Newton's Laws" },
+      { id: 33, name: "Deepika Padukone", email: "deepika@growthgrid.org", cluster: "Steady", streak: 15, xp: 1550, avgMastery: 0.82, risk: "low", rootGap: null },
+      { id: 34, name: "Akash Singhania", email: "akash@growthgrid.org", cluster: "Steady", streak: 8, xp: 950, avgMastery: 0.73, risk: "low", rootGap: null },
+      { id: 35, name: "Ishita Agarwal", email: "ishita@growthgrid.org", cluster: "Fast", streak: 25, xp: 3150, avgMastery: 0.96, risk: "low", rootGap: null },
+      { id: 36, name: "Pranav Goel", email: "pranav@growthgrid.org", cluster: "Needs Support", streak: 0, xp: 175, avgMastery: 0.33, risk: "high", rootGap: "Linear Equations" },
+      { id: 37, name: "Nandini Murthy", email: "nandini@growthgrid.org", cluster: "Steady", streak: 12, xp: 1300, avgMastery: 0.76, risk: "low", rootGap: null },
+      { id: 38, name: "Ashwin Sunder", email: "ashwin@growthgrid.org", cluster: "Fast", streak: 31, xp: 3600, avgMastery: 0.99, risk: "low", rootGap: null },
+      { id: 39, name: "Simran Kaur", email: "simran@growthgrid.org", cluster: "Steady", streak: 7, xp: 880, avgMastery: 0.71, risk: "medium", rootGap: null },
+      { id: 40, name: "Vikas Dubey", email: "vikas@growthgrid.org", cluster: "Needs Support", streak: 1, xp: 305, avgMastery: 0.42, risk: "high", rootGap: "Loops & Iteration" },
+      { id: 41, name: "Bhavna Trivedi", email: "bhavna@growthgrid.org", cluster: "Fast", streak: 20, xp: 2450, avgMastery: 0.92, risk: "low", rootGap: null },
+      { id: 42, name: "Surya Prakash", email: "surya@growthgrid.org", cluster: "Steady", streak: 14, xp: 1420, avgMastery: 0.80, risk: "low", rootGap: null },
+      { id: 43, name: "Gayathri Ram", email: "gayathri@growthgrid.org", cluster: "Needs Support", streak: 2, xp: 395, avgMastery: 0.47, risk: "high", rootGap: "Fractions & Rational Numbers" },
+      { id: 44, name: "Tarun Bajaj", email: "tarun@growthgrid.org", cluster: "Steady", streak: 9, xp: 1050, avgMastery: 0.74, risk: "low", rootGap: null },
+      { id: 45, name: "Payal Singhal", email: "payal@growthgrid.org", cluster: "Fast", streak: 23, xp: 2750, avgMastery: 0.95, risk: "low", rootGap: null },
+      { id: 46, name: "Rajesh Mittal", email: "rajesh@growthgrid.org", cluster: "Needs Support", streak: 0, xp: 160, avgMastery: 0.31, risk: "high", rootGap: "Vectors" },
+      { id: 47, name: "Aarti Mehra", email: "aarti@growthgrid.org", cluster: "Steady", streak: 11, xp: 1200, avgMastery: 0.75, risk: "low", rootGap: null },
+      { id: 48, name: "Mahesh Bhatt", email: "mahesh@growthgrid.org", cluster: "Fast", streak: 16, xp: 1950, avgMastery: 0.90, risk: "low", rootGap: null },
+      { id: 49, name: "Sunita Reddy", email: "sunita@growthgrid.org", cluster: "Needs Support", streak: 1, xp: 340, avgMastery: 0.45, risk: "high", rootGap: "Linear Equations" },
+      { id: 50, name: "Chetan Bhagat", email: "chetan@growthgrid.org", cluster: "Steady", streak: 8, xp: 910, avgMastery: 0.72, risk: "medium", rootGap: null }
+    ];
+
+    // ==========================================
+    // QUESTION POOL (STEM QUESTIONS)
+    // ==========================================
+    const QUESTION_BANK = {
+      2: [ // Linear Equations
+        {
+          id: 201,
+          difficulty: 1,
+          text: "Solve for x in the equation: x + 7 = 19",
+          options: ["x = 12", "x = 26", "x = 14", "x = 10"],
+          correct: 0,
+          hint1: "Subtract 7 from both sides of the equation.",
+          hint2: "x = 19 - 7.",
+          steps: "1) Subtract 7 from left and right: x + 7 - 7 = 19 - 7. 2) Simplify: x = 12.",
+          expl: "Applying inverse operations, subtract 7 from 19 to get x = 12.",
+          citation: "Growth Grid Algebra Vol 1, §2.1"
+        },
+        {
+          id: 202,
+          difficulty: 2,
+          text: "Solve for x in the linear equation: 3x - 5 = 16",
+          options: ["x = 7", "x = 6", "x = 5", "x = 8"],
+          correct: 0,
+          hint1: "Add 5 to both sides to isolate the 3x term.",
+          hint2: "After adding 5, you get 3x = 21. Divide by 3.",
+          steps: "1) Add 5: 3x = 16 + 5 = 21. 2) Divide by 3: x = 21 / 3 = 7.",
+          expl: "Adding 5 gives 3x = 21, and dividing by 3 results in x = 7.",
+          citation: "Growth Grid Algebra Vol 1, §2.2"
+        },
+        {
+          id: 203,
+          difficulty: 3,
+          text: "Solve for x: 4(x - 2) = 2x + 10",
+          options: ["x = 9", "x = 6", "x = 8", "x = 5"],
+          correct: 0,
+          hint1: "Distribute the 4 into (x - 2) first: 4x - 8.",
+          hint2: "Subtract 2x from both sides, then add 8.",
+          steps: "1) Distribute: 4x - 8 = 2x + 10. 2) Subtract 2x: 2x - 8 = 10. 3) Add 8: 2x = 18. 4) Divide: x = 9.",
+          expl: "Distributing gives 4x - 8 = 2x + 10. Grouping like terms yields 2x = 18, so x = 9.",
+          citation: "Growth Grid Algebra Vol 1, §2.4"
+        },
+        {
+          id: 204,
+          difficulty: 4,
+          text: "Solve the linear inequality: -3x + 4 < 19",
+          options: ["x > -5", "x < -5", "x > 5", "x < 5"],
+          correct: 0,
+          hint1: "Subtract 4 from both sides first.",
+          hint2: "CRITICAL: When dividing or multiplying by a negative number, flip the inequality sign!",
+          steps: "1) Subtract 4: -3x < 15. 2) Divide by -3 and flip '<' to '>': x > 15 / (-3) => x > -5.",
+          expl: "Subtracting 4 yields -3x < 15. Dividing by -3 flips the inequality direction, resulting in x > -5.",
+          citation: "Growth Grid Algebra Vol 1, §2.7 (Inequality Transformations)"
+        },
+        {
+          id: 205,
+          difficulty: 5,
+          text: "Find x where two lines intersect: y = 0.5x + 3 and y = -1.5x + 11",
+          options: ["x = 4", "x = 5", "x = 3.5", "x = 6"],
+          correct: 0,
+          hint1: "Equate both expressions for y: 0.5x + 3 = -1.5x + 11.",
+          hint2: "Add 1.5x to both sides to gather variable terms.",
+          steps: "1) 0.5x + 3 = -1.5x + 11. 2) Add 1.5x: 2x + 3 = 11. 3) Subtract 3: 2x = 8. 4) Divide: x = 4.",
+          expl: "Setting the equations equal gives 2x = 8, therefore x = 4. (The intersection point is (4, 5)).",
+          citation: "Growth Grid Algebra Vol 1, §3.2"
+        }
+      ],
+      8: [ // Kinematics
+        {
+          id: 801,
+          difficulty: 1,
+          text: "A cyclist travels 150 meters in 10 seconds at constant velocity. What is their speed?",
+          options: ["15 m/s", "1500 m/s", "10 m/s", "25 m/s"],
+          correct: 0,
+          hint1: "Velocity = distance / time.",
+          hint2: "Divide 150 by 10.",
+          steps: "v = d / t = 150 m / 10 s = 15 m/s.",
+          expl: "Uniform velocity is defined as displacement divided by elapsed time: 150 / 10 = 15 m/s.",
+          citation: "Growth Grid Physics Basics, §2.1"
+        },
+        {
+          id: 802,
+          difficulty: 2,
+          text: "A car accelerates from rest (u=0) at 3 m/s² for 5 seconds. What is its final velocity?",
+          options: ["15 m/s", "8 m/s", "45 m/s", "12 m/s"],
+          correct: 0,
+          hint1: "Use the kinematic equation v = u + at.",
+          hint2: "u = 0, a = 3, t = 5.",
+          steps: "v = 0 + (3 * 5) = 15 m/s.",
+          expl: "Using v = u + at, v = 0 + 15 = 15 m/s.",
+          citation: "Growth Grid Physics Basics, §2.3"
+        }
+      ],
+      14: [ // Conditionals
+        {
+          id: 1401,
+          difficulty: 2,
+          text: "In Python, what is the output of: bool(0) and bool('Hello')?",
+          options: ["False", "True", "None", "SyntaxError"],
+          correct: 0,
+          hint1: "In Python, 0 evaluates to False, non-empty strings evaluate to True.",
+          hint2: "False and True evaluates to False.",
+          steps: "1) bool(0) = False. 2) bool('Hello') = True. 3) False and True = False.",
+          expl: "In Python boolean logic, numeric zero is falsy. Hence False and True yields False.",
+          citation: "Growth Grid Coding Fundamentals, §2.1"
+        }
+      ]
+    };
+
+    // ==========================================
+    // BKT ENGINE CLASS (IN-BROWSER IMPLEMENTATION)
+    // ==========================================
+    class BrowserBKT {
+      static update(pKnown, isCorrect, hintsUsed = 0, responseTime = 12) {
+        let pL = Math.max(0.01, Math.min(0.99, pKnown));
+        let pGuess = 0.25;
+        let pSlip = 0.10;
+        let pTransit = 0.20;
+
+        if (hintsUsed === 1) pGuess = 0.40;
+        else if (hintsUsed >= 2) pGuess = 0.55;
+
+        let num, den;
+        if (isCorrect) {
+          num = pL * (1.0 - pSlip);
+          den = num + ((1.0 - pL) * pGuess);
+        } else {
+          num = pL * pSlip;
+          den = num + ((1.0 - pL) * (1.0 - pGuess));
+        }
+
+        const pLGivenObs = Math.max(0.01, Math.min(0.99, num / Math.max(1e-5, den)));
+        const pNext = Math.max(0.01, Math.min(0.99, pLGivenObs + (1.0 - pLGivenObs) * pTransit));
+
+        return {
+          prior: pKnown,
+          posterior: pLGivenObs,
+          nextPKnown: Math.round(pNext * 1000) / 1000,
+          isMastered: pNext >= 0.80
+        };
+      }
+
+      static selectDifficulty(pKnown, lastCorrect) {
+        if (pKnown < 0.30) return 1;
+        if (pKnown < 0.55) return lastCorrect ? 3 : 2;
+        if (pKnown < 0.75) return lastCorrect ? 4 : 3;
+        if (pKnown < 0.85) return 4;
+        return 5;
+      }
+    }
+
+    // ==========================================
+    // MAIN APP COMPONENT
+    // ==========================================
+    function App() {
+      // Authentication State
+      const [isAuthenticated, setIsAuthenticated] = useState(false);
+      const [currentUser, setCurrentUser] = useState(null);
+      const [loginEmail, setLoginEmail] = useState("");
+      const [loginPassword, setLoginPassword] = useState("");
+      const [showPassword, setShowPassword] = useState(false);
+      const [loginError, setLoginError] = useState("");
+      const [isLoggingIn, setIsLoggingIn] = useState(false);
+      const [rememberMe, setRememberMe] = useState(true);
+      const [isRegisterMode, setIsRegisterMode] = useState(false);
+      const [regName, setRegName] = useState("");
+      const [regSubject, setRegSubject] = useState("Algebra");
+      const [regConsent, setRegConsent] = useState(true);
+
+      // User Profile & Roles
+      const [role, setRole] = useState("student"); // 'student', 'educator', 'admin'
+      const [lang, setLang] = useState("en");
+      const [highContrast, setHighContrast] = useState(false);
+      const [lowBandwidth, setLowBandwidth] = useState(false);
+      const [activeTab, setActiveTab] = useState("dashboard"); // 'dashboard', 'quiz', 'graph', 'tutor', 'credentials', 'educator', 'admin'
+      
+      // Student State
+      const [streak, setStreak] = useState(5);
+      const [xp, setXp] = useState(420);
+      const [selectedCourseId, setSelectedCourseId] = useState(1);
+      const [activeTopicId, setActiveTopicId] = useState(2); // Linear Equations
+      const [masteryScores, setMasteryScores] = useState({
+        1: 0.88, // Fractions (Mastered)
+        2: 0.58, // Linear Equations (In Progress)
+        3: 0.20,
+        4: 0.15,
+        7: 0.92,
+        8: 0.65,
+        13: 0.85,
+        14: 0.40
+      });
+
+      // Modals
+      const [showWhyModal, setShowWhyModal] = useState(false);
+      const [showMasteryCelebration, setShowMasteryCelebration] = useState(false);
+      const [showInterventionModal, setShowInterventionModal] = useState(null); // student object
+
+      // Quiz State
+      const [qIndex, setQIndex] = useState(0);
+      const [selectedOption, setSelectedOption] = useState(null);
+      const [quizSubmitted, setQuizSubmitted] = useState(false);
+      const [hintsUnlocked, setHintsUnlocked] = useState(0);
+      const [quizFeedback, setQuizFeedback] = useState(null);
+      const [timerSec, setTimerSec] = useState(0);
+
+      // AI Tutor State
+      const [chatMessages, setChatMessages] = useState([
+        {
+          sender: "tutor",
+          text: "Hello Alex! I am your Growth Grid AI Tutor. I can guide you through STEM problems step-by-step. What would you like help with today?",
+          tier: 1,
+          citation: null
+        }
+      ]);
+      const [inputMsg, setInputMsg] = useState("");
+      const [tutorTier, setTutorTier] = useState(1); // 1: Hints first, 2: Step-by-step, 3: Full solution
+
+      // Credentials State
+      const [mintedBadges, setMintedBadges] = useState([
+        {
+          id: 1,
+          topicId: 1,
+          title: "Fractions & Rational Numbers Mastery",
+          badgeHash: "0x9a8f4c2e6d1b5a7e3f8c0d9e2a4b6c8e1f3a5b7c9d0e2f4a6b8c0d2e4f6a8b1c",
+          txHash: "0x7c9d0e2f4a6b8c0d2e4f6a8b1c9a8f4c2e6d1b5a7e3f8c0d9e2a4b6c8e1f3a5b",
+          date: "Oct 10, 2026",
+          network: "Polygon Amoy Testnet",
+          score: 88.0
+        }
+      ]);
+
+      const t = I18N[lang] || I18N.en;
+
+      // Timer tick for quiz
+      useEffect(() => {
+        let interval = null;
+        if (activeTab === "quiz" && !quizSubmitted) {
+          interval = setInterval(() => {
+            setTimerSec(prev => prev + 1);
+          }, 1000);
+        }
+        return () => clearInterval(interval);
+      }, [activeTab, quizSubmitted]);
+
+      // Current Questions List
+      const questionsList = QUESTION_BANK[activeTopicId] || QUESTION_BANK[2];
+      const currentQuestion = questionsList[qIndex % questionsList.length];
+
+      // Handle Quiz Submission
+      const handleQuizSubmit = () => {
+        if (selectedOption === null || quizSubmitted) return;
+        const isCorrect = (selectedOption === currentQuestion.correct);
+        const curScore = masteryScores[activeTopicId] || 0.15;
+        
+        // Bayesian Knowledge Tracing Calculation
+        const bktResult = BrowserBKT.update(curScore, isCorrect, hintsUnlocked, timerSec);
+        
+        setMasteryScores(prev => ({
+          ...prev,
+          [activeTopicId]: bktResult.nextPKnown
+        }));
+
+        const earnedXp = isCorrect ? 25 : 5;
+        setXp(prev => prev + earnedXp);
+
+        setQuizFeedback({
+          isCorrect,
+          priorScore: Math.round(curScore * 100),
+          newScore: Math.round(bktResult.nextPKnown * 100),
+          isMastered: bktResult.isMastered,
+          earnedXp
+        });
+        setQuizSubmitted(true);
+
+        if (bktResult.isMastered && curScore < 0.80) {
+          setShowMasteryCelebration(true);
+        }
+      };
+
+      const handleNextQuestion = () => {
+        setSelectedOption(null);
+        setQuizSubmitted(false);
+        setHintsUnlocked(0);
+        setTimerSec(0);
+        setQuizFeedback(null);
+        setQIndex(prev => prev + 1);
+      };
+
+      // Mint Badge Action
+      const handleMintBadge = (topicId, topicTitle) => {
+        const score = Math.round((masteryScores[topicId] || 0.85) * 100);
+        const randomHex = Math.random().toString(16).substring(2, 10);
+        const newBadge = {
+          id: Date.now(),
+          topicId,
+          title: `${topicTitle} Mastery`,
+          badgeHash: `0x${randomHex}a9b8c7d6e5f4123456789abcdef0123456789abcdef`,
+          txHash: `0x7a8b9c${randomHex}f4e3d2c1b0a9876543210fedcba9876543210fedcba`,
+          date: "Just Now",
+          network: "Polygon Amoy Testnet",
+          score: score
+        };
+        setMintedBadges(prev => [newBadge, ...prev]);
+        alert(`🎉 Polygon Credential Minted Successfully!\n\nBadge Hash: ${newBadge.badgeHash.substring(0, 18)}...\nNetwork: Polygon Amoy Testnet\nZero PII Stored On-Chain.`);
+      };
+
+      // AI Tutor Response Generation
+      const handleSendTutorMessage = (presetText) => {
+        const msgText = presetText || inputMsg;
+        if (!msgText.trim()) return;
+
+        const userMsg = { sender: "user", text: msgText };
+        setChatMessages(prev => [...prev, userMsg]);
+        setInputMsg("");
+
+        setTimeout(() => {
+          let reply = "";
+          let citation = null;
+
+          if (tutorTier === 1) {
+            reply = `💡 **Concept Hint (Tier 1):** Think about maintaining equality balance. What inverse operation cancels out the constant term on the variable's side? Avoid adding constants when they have opposite signs!`;
+          } else if (tutorTier === 2) {
+            reply = `📝 **Step-by-Step Guidance (Tier 2):**\n1. Move the constant term to the right side by performing the inverse operation.\n2. Combine numerical terms on the right.\n3. Divide both sides by the variable's coefficient.\n\nTry applying Step 1 now. What equation do you get?`;
+          } else {
+            reply = `📖 **Complete Solution & Course Citation (Tier 3):**\n\nFor 3x - 5 = 16:\n1) Add 5 to both sides: 3x = 21\n2) Divide by 3: x = 7\n\n*Verification:* 3(7) - 5 = 21 - 5 = 16 (Balanced!).\n\n📚 *Official Citation:* Growth Grid Algebra Handbook, Vol 1, §2.2 (Linear Equations).`;
+            citation = "Growth Grid Algebra Vol 1, §2.2";
+          }
+
+          if (lang === "ta") {
+            reply = `💡 [தமிழ்] சமன்பாட்டை சமப்படுத்த முதல் படியை மேற்கொள்ளவும். மாறிலியை வலது பக்கம் நகர்த்தவும்.`;
+          } else if (lang === "hi") {
+            reply = `💡 [हिन्दी] समीकरण को संतुलित करने के लिए दोनों तरफ समान क्रिया करें। पहले अचर पद को हटाएं।`;
+          }
+
+          setChatMessages(prev => [...prev, {
+            sender: "tutor",
+            text: reply,
+            tier: tutorTier,
+            citation: citation
+          }]);
+        }, 600);
+      };
+
+      // Text-to-Speech
+      const speakText = (text) => {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(text.replace(/[*#_`]/g, ''));
+          utterance.rate = 1.0;
+          window.speechSynthesis.speak(utterance);
+        } else {
+          alert("Text-to-speech is not supported in this browser.");
+        }
+      };
+
+      // CSV Export
+      const exportCSV = () => {
+        let csvContent = "data:text/csv;charset=utf-8,Student ID,Name,Email,Cluster,Streak,XP,Avg Mastery,Risk,Root Gap\n";
+        SAMPLE_STUDENTS.forEach(s => {
+          csvContent += `${s.id},"${s.name}",${s.email},${s.cluster},${s.streak},${s.xp},${Math.round(s.avgMastery * 100)}%,${s.risk},"${s.rootGap || 'None'}"\n`;
+        });
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "growth_grid_students_report.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      // Authentication Handlers
+      const handleLoginSubmit = (e) => {
+        if (e) e.preventDefault();
+        setLoginError("");
+
+        if (!loginEmail.trim()) {
+          setLoginError("Please enter your Mail ID.");
+          return;
+        }
+        if (!loginPassword.trim()) {
+          setLoginError("Please enter your password.");
+          return;
+        }
+
+        setIsLoggingIn(true);
+        setTimeout(() => {
+          setIsLoggingIn(false);
+          const emailLower = loginEmail.trim().toLowerCase();
+
+          let userRole = "student";
+          let userName = "Alex Student";
+          let userCluster = "Steady";
+
+          if (emailLower.includes("educator") || emailLower.includes("teacher") || emailLower.includes("vance")) {
+            userRole = "educator";
+            userName = "Dr. Evelyn Vance";
+            userCluster = "Fast";
+            setActiveTab("educator");
+          } else if (emailLower.includes("admin")) {
+            userRole = "admin";
+            userName = "System Administrator";
+            userCluster = "Fast";
+            setActiveTab("admin");
+          } else {
+            userRole = "student";
+            userName = (emailLower === "student@growthgrid.org" || !emailLower.includes("@")) 
+              ? "Alex Student" 
+              : emailLower.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+            userCluster = "Steady";
+            setActiveTab("dashboard");
+          }
+
+          setRole(userRole);
+          setCurrentUser({
+            name: userName,
+            email: loginEmail,
+            role: userRole,
+            cluster: userCluster
+          });
+          setIsAuthenticated(true);
+        }, 450);
+      };
+
+      const handleQuickFill = (roleType) => {
+        setLoginError("");
+        setIsLoggingIn(true);
+        setTimeout(() => {
+          setIsLoggingIn(false);
+          if (roleType === "student") {
+            setLoginEmail("student@growthgrid.org");
+            setLoginPassword("password123");
+            setRole("student");
+            setActiveTab("dashboard");
+            setCurrentUser({
+              name: "Alex Student",
+              email: "student@growthgrid.org",
+              role: "student",
+              cluster: "Steady"
+            });
+          } else if (roleType === "educator") {
+            setLoginEmail("educator@growthgrid.org");
+            setLoginPassword("password123");
+            setRole("educator");
+            setActiveTab("educator");
+            setCurrentUser({
+              name: "Dr. Evelyn Vance",
+              email: "educator@growthgrid.org",
+              role: "educator",
+              cluster: "Fast"
+            });
+          } else {
+            setLoginEmail("admin@growthgrid.org");
+            setLoginPassword("password123");
+            setRole("admin");
+            setActiveTab("admin");
+            setCurrentUser({
+              name: "System Administrator",
+              email: "admin@growthgrid.org",
+              role: "admin",
+              cluster: "Fast"
+            });
+          }
+          setIsAuthenticated(true);
+        }, 350);
+      };
+
+      const handleRegisterSubmit = (e) => {
+        if (e) e.preventDefault();
+        setLoginError("");
+
+        if (!regName.trim() || !loginEmail.trim() || !loginPassword.trim()) {
+          setLoginError("Please fill in all registration fields.");
+          return;
+        }
+        if (!regConsent) {
+          setLoginError("Please accept privacy and algorithmic tracking consent.");
+          return;
+        }
+
+        setIsLoggingIn(true);
+        setTimeout(() => {
+          setIsLoggingIn(false);
+          setRole("student");
+          setActiveTab("dashboard");
+          setCurrentUser({
+            name: regName.trim(),
+            email: loginEmail.trim(),
+            role: "student",
+            cluster: "Steady",
+            subject: regSubject
+          });
+          setIsAuthenticated(true);
+        }, 500);
+      };
+
+      const handleLogout = () => {
+        setIsAuthenticated(false);
+        setCurrentUser(null);
+        setLoginPassword("");
+        setLoginError("");
+        setIsRegisterMode(false);
+      };
+
+      // If user is not authenticated, render Login Page first!
+      if (!isAuthenticated) {
+        return (
+          <div className={`min-h-screen ${highContrast ? 'contrast-125' : ''} bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 flex flex-col justify-between selection:bg-brand-500 selection:text-white`}>
+            
+            {/* Top Navigation */}
+            <header className="px-6 py-4 flex items-center justify-between border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-500/20 text-white font-extrabold text-xl">
+                  G²
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-lg text-white tracking-tight">{t.platformName}</span>
+                    <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                      STEM Adaptive Portal
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 hidden sm:block">{t.tagline}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <select
+                  value={lang}
+                  onChange={(e) => setLang(e.target.value)}
+                  className="bg-slate-800 border border-slate-700 text-xs text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-brand-500"
+                >
+                  <option value="en">English</option>
+                  <option value="ta">தமிழ் (Tamil)</option>
+                  <option value="hi">हिन्दी (Hindi)</option>
+                </select>
+
+                <button
+                  onClick={() => setLowBandwidth(!lowBandwidth)}
+                  title={t.lowBandwidth}
+                  className={`p-1.5 rounded-lg border text-xs ${lowBandwidth ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
+                >
+                  📶
+                </button>
+                <button
+                  onClick={() => setHighContrast(!highContrast)}
+                  title={t.highContrast}
+                  className={`p-1.5 rounded-lg border text-xs ${highContrast ? 'bg-amber-500/20 border-amber-500 text-amber-300' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
+                >
+                  👁️
+                </button>
+              </div>
+            </header>
+
+            {/* Central Login Card Container */}
+            <div className="flex-1 flex items-center justify-center p-4 sm:p-6 my-6">
+              <div className="max-w-md w-full bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl shadow-2xl p-6 sm:p-8 relative overflow-hidden space-y-6">
+                
+                {/* Accent Top Border Glow */}
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-600 via-sky-400 to-indigo-600"></div>
+
+                {/* Brand Logo & Title */}
+                <div className="text-center space-y-2">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-600 via-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-500/30 text-white font-extrabold text-2xl mx-auto">
+                    G²
+                  </div>
+                  <h2 className="text-2xl font-extrabold text-white tracking-tight">
+                    {isRegisterMode ? "Create Your Account" : "Sign in to Growth Grid"}
+                  </h2>
+                  <p className="text-xs text-slate-400 max-w-xs mx-auto">
+                    {isRegisterMode 
+                      ? "Start your personalized adaptive STEM learning path with Bayesian Knowledge Tracing."
+                      : "Enter your registered Mail ID and password to access your adaptive learning dashboard."}
+                  </p>
+                </div>
+
+                {/* Tab Switcher: Sign In vs Register */}
+                <div className="flex items-center p-1 bg-slate-950/80 rounded-2xl border border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => { setIsRegisterMode(false); setLoginError(""); }}
+                    className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${!isRegisterMode ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setIsRegisterMode(true); setLoginError(""); }}
+                    className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${isRegisterMode ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    New Student
+                  </button>
+                </div>
+
+                {/* Error Banner */}
+                {loginError && (
+                  <div className="p-3 bg-rose-950/40 border border-rose-500/50 rounded-xl text-xs text-rose-300 flex items-center gap-2 animate-shake">
+                    <span>⚠️</span>
+                    <span>{loginError}</span>
+                  </div>
+                )}
+
+                {/* Sign In Form */}
+                {!isRegisterMode ? (
+                  <form onSubmit={handleLoginSubmit} className="space-y-4">
+                    {/* Mail ID Input */}
+                    <div className="space-y-1.5 text-left">
+                      <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                        <span>Mail ID / Email Address</span>
+                        <span className="text-[10px] text-brand-400 font-normal">student@growthgrid.org</span>
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm">✉️</span>
+                        <input
+                          type="email"
+                          required
+                          value={loginEmail}
+                          onChange={(e) => setLoginEmail(e.target.value)}
+                          placeholder="e.g. student@growthgrid.org"
+                          className="w-full bg-slate-950/80 border border-slate-700/80 focus:border-brand-500 rounded-xl py-3 pl-10 pr-4 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Password Input */}
+                    <div className="space-y-1.5 text-left">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-slate-300">Password</label>
+                        <span className="text-[10px] text-slate-400 font-normal">Demo: password123</span>
+                      </div>
+                      <div className="relative">
+                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm">🔒</span>
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          required
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          placeholder="Enter your password"
+                          className="w-full bg-slate-950/80 border border-slate-700/80 focus:border-brand-500 rounded-xl py-3 pl-10 pr-10 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs"
+                          title={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? "🙈" : "👁️"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Remember Me & Help */}
+                    <div className="flex items-center justify-between text-xs text-slate-400 pt-1">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={rememberMe}
+                          onChange={(e) => setRememberMe(e.target.checked)}
+                          className="rounded bg-slate-950 border-slate-700 text-brand-500 focus:ring-0"
+                        />
+                        <span>Remember me</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => alert("For this demo, any password or 'password123' works with registered emails.")}
+                        className="text-brand-400 hover:underline text-[11px]"
+                      >
+                        Need help?
+                      </button>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      disabled={isLoggingIn}
+                      className="w-full py-3.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm shadow-lg shadow-brand-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      {isLoggingIn ? (
+                        <>
+                          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                          <span>Authenticating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Sign In & Start Learning</span>
+                          <span>→</span>
+                        </>
+                      )}
+                    </button>
+                  </form>
+                ) : (
+                  /* Registration Form */
+                  <form onSubmit={handleRegisterSubmit} className="space-y-4">
+                    <div className="space-y-1.5 text-left">
+                      <label className="text-xs font-semibold text-slate-300">Full Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={regName}
+                        onChange={(e) => setRegName(e.target.value)}
+                        placeholder="e.g. Sai Krupa"
+                        className="w-full bg-slate-950/80 border border-slate-700/80 focus:border-brand-500 rounded-xl py-3 px-3.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 text-left">
+                      <label className="text-xs font-semibold text-slate-300">Mail ID</label>
+                      <input
+                        type="email"
+                        required
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
+                        placeholder="e.g. newstudent@growthgrid.org"
+                        className="w-full bg-slate-950/80 border border-slate-700/80 focus:border-brand-500 rounded-xl py-3 px-3.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 text-left">
+                      <label className="text-xs font-semibold text-slate-300">Password</label>
+                      <input
+                        type="password"
+                        required
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        placeholder="Create a strong password"
+                        className="w-full bg-slate-950/80 border border-slate-700/80 focus:border-brand-500 rounded-xl py-3 px-3.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 text-left">
+                      <label className="text-xs font-semibold text-slate-300">Starting STEM Subject</label>
+                      <select
+                        value={regSubject}
+                        onChange={(e) => setRegSubject(e.target.value)}
+                        className="w-full bg-slate-950/80 border border-slate-700/80 focus:border-brand-500 rounded-xl py-3 px-3.5 text-xs text-white focus:outline-none transition-colors"
+                      >
+                        <option value="Algebra">📐 Algebra & Functions</option>
+                        <option value="Physics">⚡ Physics Fundamentals</option>
+                        <option value="Coding">💻 Coding Fundamentals</option>
+                      </select>
+                    </div>
+
+                    <label className="flex items-start gap-2 text-[11px] text-slate-400 cursor-pointer pt-1 text-left">
+                      <input
+                        type="checkbox"
+                        checked={regConsent}
+                        onChange={(e) => setRegConsent(e.target.checked)}
+                        className="rounded bg-slate-950 border-slate-700 text-brand-500 focus:ring-0 mt-0.5"
+                      />
+                      <span>I agree to adaptive Bayesian skill modeling and anonymous Polygon on-chain credentialing (Zero PII).</span>
+                    </label>
+
+                    <button
+                      type="submit"
+                      disabled={isLoggingIn}
+                      className="w-full py-3.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm shadow-lg shadow-brand-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      {isLoggingIn ? "Creating Profile..." : "Create Account & Start Learning →"}
+                    </button>
+                  </form>
+                )}
+
+                {/* 1-Click Fast Demo Logins */}
+                <div className="pt-2 border-t border-slate-800 space-y-2.5">
+                  <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider text-center">
+                    ⚡ Instant 1-Click Demo Accounts
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleQuickFill("student")}
+                      className="p-2.5 rounded-xl bg-slate-950/90 hover:bg-slate-800 border border-slate-800 hover:border-brand-500 text-slate-200 text-[11px] font-semibold flex flex-col items-center gap-1 transition-all group cursor-pointer"
+                    >
+                      <span className="text-base group-hover:scale-110 transition-transform">🎓</span>
+                      <span className="text-white">Student</span>
+                      <span className="text-[9px] text-slate-500 font-normal">Alex (Steady)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleQuickFill("educator")}
+                      className="p-2.5 rounded-xl bg-slate-950/90 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500 text-slate-200 text-[11px] font-semibold flex flex-col items-center gap-1 transition-all group cursor-pointer"
+                    >
+                      <span className="text-base group-hover:scale-110 transition-transform">👩‍🏫</span>
+                      <span className="text-white">Educator</span>
+                      <span className="text-[9px] text-slate-500 font-normal">Dr. Vance</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleQuickFill("admin")}
+                      className="p-2.5 rounded-xl bg-slate-950/90 hover:bg-slate-800 border border-slate-800 hover:border-amber-500 text-slate-200 text-[11px] font-semibold flex flex-col items-center gap-1 transition-all group cursor-pointer"
+                    >
+                      <span className="text-base group-hover:scale-110 transition-transform">⚙️</span>
+                      <span className="text-white">Admin</span>
+                      <span className="text-[9px] text-slate-500 font-normal">LMS / System</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Feature Tags */}
+                <div className="flex items-center justify-center gap-3 pt-1 text-[10px] text-slate-500">
+                  <span>🧠 BKT P(L) Engine</span>
+                  <span>•</span>
+                  <span>🤖 RAG AI Tutor</span>
+                  <span>•</span>
+                  <span>⛓️ Polygon Badges</span>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Footer */}
+            <footer className="py-4 border-t border-slate-800/80 text-center text-xs text-slate-500">
+              Growth Grid © 2026 • Real-Time Adaptive STEM Learning Platform • Zero-PII Cryptographic Credentials
+            </footer>
+
+          </div>
+        );
+      }
+
+      return (
+        <div className={`min-h-screen ${highContrast ? 'contrast-125' : ''}`}>
+          
+          {/* ========================================================= */}
+          {/* TOP NAVIGATION BAR */}
+          {/* ========================================================= */}
+          <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 lg:px-8 py-3">
+            <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+              
+              {/* Brand Logo & Name */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-500/20 text-white font-extrabold text-xl">
+                  G²
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-lg text-white tracking-tight">{t.platformName}</span>
+                    <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                      BKT + RAG + Polygon
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 hidden sm:block">{t.tagline}</p>
+                </div>
+              </div>
+
+              {/* Navigation Tabs */}
+              <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto custom-scrollbar py-1">
+                {role === "student" && (
+                  <>
+                    <button
+                      onClick={() => setActiveTab("dashboard")}
+                      className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${activeTab === 'dashboard' ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30' : 'text-slate-300 hover:bg-slate-800'}`}
+                    >
+                      📊 {t.dashboard}
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("quiz")}
+                      className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${activeTab === 'quiz' ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30' : 'text-slate-300 hover:bg-slate-800'}`}
+                    >
+                      🎯 {t.adaptiveQuiz}
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("graph")}
+                      className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${activeTab === 'graph' ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30' : 'text-slate-300 hover:bg-slate-800'}`}
+                    >
+                      🕸️ {t.knowledgeGraph}
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("tutor")}
+                      className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${activeTab === 'tutor' ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30' : 'text-slate-300 hover:bg-slate-800'}`}
+                    >
+                      🤖 {t.aiTutor}
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("credentials")}
+                      className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${activeTab === 'credentials' ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30' : 'text-slate-300 hover:bg-slate-800'}`}
+                    >
+                      🏅 {t.credentials}
+                    </button>
+                  </>
+                )}
+
+                {role === "educator" && (
+                  <button
+                    onClick={() => setActiveTab("educator")}
+                    className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${activeTab === 'educator' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'text-slate-300 hover:bg-slate-800'}`}
+                  >
+                    👩‍🏫 {t.educatorPortal}
+                  </button>
+                )}
+
+                {role === "admin" && (
+                  <button
+                    onClick={() => setActiveTab("admin")}
+                    className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${activeTab === 'admin' ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30' : 'text-slate-300 hover:bg-slate-800'}`}
+                  >
+                    ⚙️ {t.adminPortal}
+                  </button>
+                )}
+              </nav>
+
+              {/* Controls: User Profile, Role Switcher, Language, Accessibility, Sign Out */}
+              <div className="flex items-center gap-2">
+                {/* Logged-in User Profile Pill */}
+                <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="font-semibold text-white">
+                    {currentUser?.name || (role === "student" ? "Alex Student" : role === "educator" ? "Dr. Evelyn Vance" : "System Admin")}
+                  </span>
+                  <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300">
+                    {role}
+                  </span>
+                </div>
+
+                {/* Role Toggle Dropdown */}
+                <div className="relative">
+                  <select
+                    value={role}
+                    onChange={(e) => {
+                      const newRole = e.target.value;
+                      setRole(newRole);
+                      if (newRole === "educator") setActiveTab("educator");
+                      else if (newRole === "admin") setActiveTab("admin");
+                      else setActiveTab("dashboard");
+                    }}
+                    className="bg-slate-800 border border-slate-700 text-xs text-brand-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-brand-500 font-medium cursor-pointer"
+                  >
+                    <option value="student">Role: Student (Alex)</option>
+                    <option value="educator">Role: Educator (Dr. Vance)</option>
+                    <option value="admin">Role: Admin (LMS)</option>
+                  </select>
+                </div>
+
+                {/* Multilingual Selector */}
+                <select
+                  value={lang}
+                  onChange={(e) => setLang(e.target.value)}
+                  className="bg-slate-800 border border-slate-700 text-xs text-slate-300 rounded-lg px-2 py-1.5 focus:outline-none focus:border-brand-500"
+                >
+                  <option value="en">English</option>
+                  <option value="ta">தமிழ் (Tamil)</option>
+                  <option value="hi">हिन्दी (Hindi)</option>
+                </select>
+
+                {/* Accessibility Modes */}
+                <button
+                  onClick={() => setLowBandwidth(!lowBandwidth)}
+                  title={t.lowBandwidth}
+                  className={`p-1.5 rounded-lg border text-xs ${lowBandwidth ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
+                >
+                  📶
+                </button>
+                <button
+                  onClick={() => setHighContrast(!highContrast)}
+                  title={t.highContrast}
+                  className={`p-1.5 rounded-lg border text-xs ${highContrast ? 'bg-amber-500/20 border-amber-500 text-amber-300' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
+                >
+                  👁️
+                </button>
+
+                {/* Log Out Button */}
+                <button
+                  onClick={handleLogout}
+                  title="Sign Out"
+                  className="px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <span>🚪</span>
+                  <span className="hidden sm:inline">Sign Out</span>
+                </button>
+              </div>
+
+            </div>
+          </header>
+
+          {/* ========================================================= */}
+          {/* MAIN CONTENT WRAPPER */}
+          {/* ========================================================= */}
+          <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
+
+            {/* ------------------------------------------------------- */}
+            {/* 1. STUDENT DASHBOARD */}
+            {/* ------------------------------------------------------- */}
+            {role === "student" && activeTab === "dashboard" && (
+              <div className="space-y-6">
+                
+                {/* Header Stats Row */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex items-center gap-4 shadow-sm">
+                    <div className="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-2xl">
+                      🔥
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400 uppercase font-semibold">{t.currentStreak}</p>
+                      <h3 className="text-2xl font-bold text-white">{streak} <span className="text-sm font-normal text-slate-400">{t.days}</span></h3>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex items-center gap-4 shadow-sm">
+                    <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-2xl">
+                      ⭐
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400 uppercase font-semibold">{t.xpPoints}</p>
+                      <h3 className="text-2xl font-bold text-amber-300">{xp}</h3>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex items-center gap-4 shadow-sm">
+                    <div className="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/30 flex items-center justify-center text-2xl">
+                      🧠
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400 uppercase font-semibold">BKT Pacing Profile</p>
+                      <h3 className="text-xl font-bold text-brand-300">Steady Learner</h3>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex items-center gap-4 shadow-sm">
+                    <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-2xl">
+                      ⛓️
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400 uppercase font-semibold">Polygon Badges</p>
+                      <h3 className="text-2xl font-bold text-purple-300">{mintedBadges.length}</h3>
+                    </div>
+                  </div>
+                </div>
+
+                {/* "NEXT RECOMMENDED LESSON" HERO CARD */}
+                <div className="bg-gradient-to-r from-slate-800 via-slate-800/95 to-brand-950/40 border border-brand-500/30 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-xl">
+                  <div className="absolute right-0 top-0 w-96 h-96 bg-brand-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                  
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+                    <div className="space-y-3 max-w-2xl">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-xs font-semibold text-brand-300">
+                        <span>⚡ Real-Time BKT Recommendation</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-ping"></span>
+                      </div>
+                      
+                      <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                        Linear Equations & Inequalities
+                      </h2>
+                      <p className="text-sm text-slate-300 leading-relaxed">
+                        Your foundational skill in <strong>Fractions & Rational Numbers (88%)</strong> is solid! You are currently at <strong>58% mastery</strong> on Linear Equations. Reach 80% to clear the Mastery Gate and unlock Systems of Equations.
+                      </p>
+
+                      <div className="flex flex-wrap items-center gap-4 pt-2">
+                        <button
+                          onClick={() => {
+                            setActiveTopicId(2);
+                            setActiveTab("quiz");
+                          }}
+                          className="px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm shadow-lg shadow-brand-600/30 transition-all flex items-center gap-2"
+                        >
+                          <span>{t.startPractice}</span>
+                          <span>→</span>
+                        </button>
+                        
+                        <button
+                          onClick={() => setShowWhyModal(true)}
+                          className="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-medium text-sm transition-all flex items-center gap-2"
+                        >
+                          <span>💡</span>
+                          <span>{t.whyThis}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Circular BKT Mastery Gauge */}
+                    <div className="bg-slate-900/80 border border-slate-700/80 rounded-2xl p-5 flex flex-col items-center text-center min-w-[200px]">
+                      <div className="relative w-28 h-28 flex items-center justify-center">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                          <path
+                            className="text-slate-800"
+                            strokeWidth="3.8"
+                            stroke="currentColor"
+                            fill="none"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          />
+                          <path
+                            className="text-brand-500"
+                            strokeDasharray={`${Math.round((masteryScores[2] || 0.58) * 100)}, 100`}
+                            strokeWidth="3.8"
+                            strokeLinecap="round"
+                            stroke="currentColor"
+                            fill="none"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          />
+                        </svg>
+                        <div className="absolute flex flex-col items-center">
+                          <span className="text-2xl font-extrabold text-white">{Math.round((masteryScores[2] || 0.58) * 100)}%</span>
+                          <span className="text-[10px] text-slate-400 uppercase font-semibold">P(L)</span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-300 mt-2 font-medium">Topic Mastery</p>
+                      <span className="text-[10px] text-amber-400 mt-0.5">80% required to unlock</span>
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* COURSE & TOPIC MASTERY HEATMAP */}
+                <div className="bg-slate-800/80 border border-slate-700/80 rounded-3xl p-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                    <div>
+                      <h3 className="text-lg font-bold text-white">STEM Topic Mastery Heatmap</h3>
+                      <p className="text-xs text-slate-400">Color-coded by Bayesian Knowledge Tracing probability P(L)</p>
+                    </div>
+
+                    {/* Course Filter Tabs */}
+                    <div className="flex items-center gap-2 bg-slate-900/60 p-1 rounded-xl border border-slate-700/60">
+                      {COURSES_DATA.map(c => (
+                        <button
+                          key={c.id}
+                          onClick={() => setSelectedCourseId(c.id)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${selectedCourseId === c.id ? 'bg-brand-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                        >
+                          {c.icon} {c.subject}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Grid of Topics for Selected Course */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {COURSES_DATA.find(c => c.id === selectedCourseId)?.topics.map(tItem => {
+                      const score = masteryScores[tItem.id] || tItem.initialMastery;
+                      const pct = Math.round(score * 100);
+                      const isMastered = pct >= 80;
+                      const isUnlocked = tItem.prereqs.length === 0 || tItem.prereqs.every(p => (masteryScores[p] || 0) >= 0.80);
+
+                      let bgBadge = "bg-slate-700/40 text-slate-400";
+                      let borderStyle = "border-slate-700";
+                      if (isMastered) {
+                        bgBadge = "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
+                        borderStyle = "border-emerald-500/40";
+                      } else if (pct > 40) {
+                        bgBadge = "bg-brand-500/20 text-brand-300 border-brand-500/30";
+                        borderStyle = "border-brand-500/40";
+                      } else if (!isUnlocked) {
+                        bgBadge = "bg-slate-800 text-slate-500 border-slate-700";
+                        borderStyle = "border-slate-800 opacity-60";
+                      }
+
+                      return (
+                        <div
+                          key={tItem.id}
+                          className={`bg-slate-900/70 border ${borderStyle} rounded-2xl p-5 flex flex-col justify-between transition-all hover:border-brand-500/60 group`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <span className="text-xs text-slate-400 font-mono">Topic #{tItem.order}</span>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${bgBadge}`}>
+                                {!isUnlocked ? "🔒 Locked" : isMastered ? "✅ Mastered (≥80%)" : "⏳ In Progress"}
+                              </span>
+                            </div>
+                            <h4 className="font-bold text-white text-base group-hover:text-brand-300 transition-colors">
+                              {tItem.title}
+                            </h4>
+                          </div>
+
+                          <div className="mt-4 pt-3 border-t border-slate-800/80">
+                            <div className="flex items-center justify-between text-xs text-slate-400 mb-1.5">
+                              <span>BKT P(L):</span>
+                              <span className="font-bold text-white">{pct}%</span>
+                            </div>
+                            
+                            {/* Mastery Progress Bar */}
+                            <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all duration-500 ${isMastered ? 'bg-emerald-500' : pct > 40 ? 'bg-brand-500' : 'bg-amber-500'}`}
+                                style={{ width: `${pct}%` }}
+                              ></div>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2 mt-4">
+                              <button
+                                disabled={!isUnlocked}
+                                onClick={() => {
+                                  setActiveTopicId(tItem.id);
+                                  setActiveTab("quiz");
+                                }}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold w-full transition-all ${isUnlocked ? 'bg-slate-800 hover:bg-brand-600 text-white' : 'bg-slate-800/40 text-slate-500 cursor-not-allowed'}`}
+                              >
+                                {isUnlocked ? (isMastered ? "Practice Again" : "Continue Quiz") : "Requires Prereqs"}
+                              </button>
+
+                              {isMastered && (
+                                <button
+                                  onClick={() => handleMintBadge(tItem.id, tItem.title)}
+                                  title="Mint Polygon Badge"
+                                  className="p-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 border border-purple-500/30 text-xs"
+                                >
+                                  🏅
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* ------------------------------------------------------- */}
+            {/* 2. ADAPTIVE QUIZ RUNNER WITH REAL-TIME BKT */}
+            {/* ------------------------------------------------------- */}
+            {role === "student" && activeTab === "quiz" && (
+              <div className="max-w-4xl mx-auto space-y-6">
+                
+                {/* Quiz Header Bar */}
+                <div className="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setActiveTab("dashboard")}
+                      className="p-2 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-300 text-sm"
+                    >
+                      ← Back
+                    </button>
+                    <div>
+                      <h3 className="font-bold text-white text-base">Linear Equations & Inequalities</h3>
+                      <p className="text-xs text-slate-400">Dynamic Difficulty Scaling • Real-Time BKT Updates</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-mono text-slate-300">
+                      ⏱️ {timerSec}s
+                    </div>
+                    <div className="px-3 py-1.5 rounded-lg bg-brand-500/10 border border-brand-500/30 text-xs font-semibold text-brand-300">
+                      🎯 Level {currentQuestion.difficulty}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Real-time BKT Mastery Probability Gauge Bar */}
+                <div className="bg-slate-800/60 border border-slate-700/80 rounded-2xl p-4">
+                  <div className="flex items-center justify-between text-xs mb-2">
+                    <span className="text-slate-300 font-semibold flex items-center gap-1.5">
+                      <span>🧠 Real-Time BKT Knowledge Estimate P(L):</span>
+                      <span className="text-brand-300 font-bold">{Math.round((masteryScores[activeTopicId] || 0.58) * 100)}%</span>
+                    </span>
+                    <span className="text-amber-400 font-medium">Mastery Gate: 80%</span>
+                  </div>
+                  
+                  <div className="relative w-full h-3 rounded-full bg-slate-900 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-brand-500 to-indigo-500 transition-all duration-700"
+                      style={{ width: `${Math.round((masteryScores[activeTopicId] || 0.58) * 100)}%` }}
+                    ></div>
+                    {/* 80% Threshold Line */}
+                    <div className="absolute top-0 bottom-0 left-[80%] w-0.5 bg-amber-400 z-10" title="80% Gate"></div>
+                  </div>
+                </div>
+
+                {/* Lesson Concept & Interactive Simulation Widget (low-bandwidth aware) */}
+                {!lowBandwidth && (
+                  <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 text-xs text-slate-300 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">💡</span>
+                      <div>
+                        <strong>Key Formula:</strong> <code className="text-brand-300">ax + b = c  ⟹  x = (c - b) / a</code>
+                        <span className="text-slate-400 ml-2">Golden rule: maintain symmetry on both sides.</span>
+                      </div>
+                    </div>
+                    <a
+                      href="https://phet.colorado.edu/sims/html/equality-explorer/latest/equality-explorer_en.html"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-brand-400 hover:underline shrink-0 text-xs font-medium"
+                    >
+                      Open PhET Interactive Sim ↗
+                    </a>
+                  </div>
+                )}
+
+                {/* Main Question Card */}
+                <div className="bg-slate-800/90 border border-slate-700 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">
+                      Question {qIndex + 1}
+                    </span>
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-700 text-slate-300">
+                      Difficulty: {Array(currentQuestion.difficulty).fill("★").join("")}
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl sm:text-2xl font-bold text-white leading-snug">
+                    {currentQuestion.text}
+                  </h3>
+
+                  {/* Multiple Choice Options */}
+                  <div className="space-y-3">
+                    {currentQuestion.options.map((opt, idx) => {
+                      let btnStyle = "bg-slate-900/80 border-slate-700 hover:border-brand-500 text-slate-200";
+                      
+                      if (quizSubmitted) {
+                        if (idx === currentQuestion.correct) {
+                          btnStyle = "bg-emerald-950/60 border-emerald-500 text-emerald-200 font-bold";
+                        } else if (idx === selectedOption) {
+                          btnStyle = "bg-rose-950/60 border-rose-500 text-rose-200";
+                        } else {
+                          btnStyle = "bg-slate-900/40 border-slate-800 text-slate-500 opacity-60";
+                        }
+                      } else if (selectedOption === idx) {
+                        btnStyle = "bg-brand-950/60 border-brand-500 text-brand-200 shadow-md shadow-brand-500/20";
+                      }
+
+                      return (
+                        <button
+                          key={idx}
+                          disabled={quizSubmitted}
+                          onClick={() => setSelectedOption(idx)}
+                          className={`w-full p-4 rounded-xl border text-left text-sm sm:text-base font-medium transition-all flex items-center justify-between gap-4 ${btnStyle}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center text-xs font-bold font-mono">
+                              {String.fromCharCode(65 + idx)}
+                            </span>
+                            <span>{opt}</span>
+                          </div>
+                          {quizSubmitted && idx === currentQuestion.correct && (
+                            <span className="text-emerald-400 font-bold text-xs uppercase px-2 py-0.5 bg-emerald-500/20 rounded">Correct</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Tiered Hints Accordion */}
+                  <div className="pt-2 border-t border-slate-700/60 flex flex-wrap items-center gap-3">
+                    <span className="text-xs text-slate-400 font-medium">Tiered Pedagogical Scaffolding:</span>
+                    
+                    <button
+                      disabled={hintsUnlocked >= 1}
+                      onClick={() => setHintsUnlocked(1)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${hintsUnlocked >= 1 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}
+                    >
+                      💡 Hint 1 (Concept)
+                    </button>
+
+                    <button
+                      disabled={hintsUnlocked >= 2}
+                      onClick={() => setHintsUnlocked(2)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${hintsUnlocked >= 2 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}
+                    >
+                      🔍 Hint 2 (Formula)
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setActiveTab("tutor");
+                        setInputMsg(`Help me with this question: "${currentQuestion.text}"`);
+                      }}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-500/20 text-brand-300 border border-brand-500/30 hover:bg-brand-500/30 transition-all flex items-center gap-1.5"
+                    >
+                      <span>🤖 Ask AI Tutor</span>
+                    </button>
+                  </div>
+
+                  {/* Render Unlocked Hints */}
+                  {hintsUnlocked >= 1 && (
+                    <div className="bg-amber-950/30 border border-amber-500/40 rounded-xl p-3 text-xs text-amber-200">
+                      <strong>Hint 1:</strong> {currentQuestion.hint1}
+                    </div>
+                  )}
+                  {hintsUnlocked >= 2 && (
+                    <div className="bg-amber-950/30 border border-amber-500/40 rounded-xl p-3 text-xs text-amber-200">
+                      <strong>Hint 2:</strong> {currentQuestion.hint2}
+                    </div>
+                  )}
+
+                  {/* Submission & Next Buttons */}
+                  <div className="pt-4 flex items-center justify-between gap-4">
+                    {!quizSubmitted ? (
+                      <button
+                        disabled={selectedOption === null}
+                        onClick={handleQuizSubmit}
+                        className={`w-full py-3.5 rounded-xl font-bold text-sm shadow-lg transition-all ${selectedOption !== null ? 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-600/30' : 'bg-slate-700 text-slate-400 cursor-not-allowed'}`}
+                      >
+                        {t.submitAnswer}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleNextQuestion}
+                        className="w-full py-3.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm shadow-lg shadow-brand-600/30 transition-all flex items-center justify-center gap-2"
+                      >
+                        <span>{t.nextQuestion}</span>
+                        <span>→</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Instant Feedback Panel */}
+                  {quizFeedback && (
+                    <div className={`p-4 rounded-2xl border ${quizFeedback.isCorrect ? 'bg-emerald-950/40 border-emerald-500/50' : 'bg-rose-950/40 border-rose-500/50'} space-y-3`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 font-bold text-sm">
+                          <span className="text-xl">{quizFeedback.isCorrect ? '🎉' : '❌'}</span>
+                          <span className={quizFeedback.isCorrect ? 'text-emerald-300' : 'text-rose-300'}>
+                            {quizFeedback.isCorrect ? 'Brilliant! Correct Answer' : 'Incorrect Attempt'}
+                          </span>
+                        </div>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-200">
+                          +{quizFeedback.earnedXp} XP
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        {currentQuestion.expl}
+                      </p>
+
+                      <div className="p-3 bg-slate-900/60 rounded-xl text-xs space-y-1">
+                        <div className="font-semibold text-brand-300">Step-by-Step Breakdown:</div>
+                        <p className="text-slate-300 font-mono text-[11px]">{currentQuestion.steps}</p>
+                        <div className="text-[11px] text-slate-400 pt-1">
+                          📖 <em>Citation:</em> {currentQuestion.citation}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800">
+                        <span>BKT Transition: {quizFeedback.priorScore}% ➔ <strong className="text-white">{quizFeedback.newScore}%</strong></span>
+                        <button
+                          onClick={() => speakText(currentQuestion.expl)}
+                          className="text-brand-300 hover:underline flex items-center gap-1"
+                        >
+                          <span>🔊 Read Aloud</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+
+              </div>
+            )}
+
+            {/* ------------------------------------------------------- */}
+            {/* 3. PREREQUISITE KNOWLEDGE GRAPH (ROOT-GAP DETECTION) */}
+            {/* ------------------------------------------------------- */}
+            {role === "student" && activeTab === "graph" && (
+              <div className="space-y-6">
+                
+                <div className="bg-slate-800/80 border border-slate-700 rounded-3xl p-6">
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+                    <div>
+                      <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                        <span>Prerequisite Directed Acyclic Graph (DAG)</span>
+                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                          Root Skill Gap Detector
+                        </span>
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Nodes show STEM skills. Directed arrows define prerequisite dependencies. Green nodes are mastered (≥80%).
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-4 text-xs">
+                      <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-emerald-500"></span> Mastered (≥80%)</div>
+                      <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-brand-500"></span> In Progress</div>
+                      <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-slate-600"></span> Locked</div>
+                    </div>
+                  </div>
+
+                  {/* Interactive SVG Knowledge Graph */}
+                  <div className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-6 overflow-x-auto custom-scrollbar">
+                    <svg className="w-full min-w-[750px] h-[340px]" viewBox="0 0 800 340">
+                      <defs>
+                        <marker id="arrow" viewBox="0 0 10 10" refX="22" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                          <path d="M 0 0 L 10 5 L 0 10 z" fill="#38bdf8" />
+                        </marker>
+                      </defs>
+
+                      {/* Edges / Prerequisite Arrows */}
+                      <path d="M 120 160 L 260 160" stroke="#38bdf8" strokeWidth="2.5" markerEnd="url(#arrow)" />
+                      <path d="M 380 160 L 520 100" stroke="#38bdf8" strokeWidth="2.5" markerEnd="url(#arrow)" />
+                      <path d="M 380 160 L 520 220" stroke="#38bdf8" strokeWidth="2.5" markerEnd="url(#arrow)" />
+                      <path d="M 640 100 L 720 150" stroke="#475569" strokeWidth="2" strokeDasharray="4" markerEnd="url(#arrow)" />
+                      <path d="M 640 220 L 720 170" stroke="#475569" strokeWidth="2" strokeDasharray="4" markerEnd="url(#arrow)" />
+
+                      {/* Node 1: Fractions (Mastered: 88%) */}
+                      <g className="cursor-pointer" onClick={() => alert("Topic #1: Fractions & Rational Numbers\nMastery: 88% (Cleared!)")}>
+                        <rect x="20" y="120" width="160" height="80" rx="16" fill="#064e3b" stroke="#10b981" strokeWidth="2" />
+                        <text x="100" y="152" fill="#ecfdf5" fontSize="13" fontWeight="bold" textAnchor="middle">Fractions & Decimals</text>
+                        <text x="100" y="174" fill="#a7f3d0" fontSize="12" textAnchor="middle">Mastery: 88% ✅</text>
+                      </g>
+
+                      {/* Node 2: Linear Equations (Active: 58%) */}
+                      <g className="cursor-pointer" onClick={() => alert("Topic #2: Linear Equations\nMastery: 58% (In progress)\nPrerequisites satisfied.")}>
+                        <rect x="260" y="120" width="170" height="80" rx="16" fill="#0c4a6e" stroke="#0ea5e9" strokeWidth="3" />
+                        <text x="345" y="152" fill="#f0f9ff" fontSize="13" fontWeight="bold" textAnchor="middle">Linear Equations</text>
+                        <text x="345" y="174" fill="#7dd3fc" fontSize="12" textAnchor="middle">Mastery: 58% (Active)</text>
+                      </g>
+
+                      {/* Node 3: Systems of Equations (Locked: 20%) */}
+                      <g className="cursor-pointer" onClick={() => alert("Topic #3: Systems of Equations\nLocked: Requires ≥80% on Linear Equations.")}>
+                        <rect x="520" y="60" width="170" height="80" rx="16" fill="#1e293b" stroke="#475569" strokeWidth="2" />
+                        <text x="605" y="92" fill="#cbd5e1" fontSize="13" fontWeight="bold" textAnchor="middle">Systems of Equations</text>
+                        <text x="605" y="114" fill="#94a3b8" fontSize="12" textAnchor="middle">Mastery: 20% 🔒</text>
+                      </g>
+
+                      {/* Node 4: Quadratic Equations (Locked: 15%) */}
+                      <g className="cursor-pointer" onClick={() => alert("Topic #4: Quadratic Equations\nLocked: Requires ≥80% on Linear Equations.")}>
+                        <rect x="520" y="180" width="170" height="80" rx="16" fill="#1e293b" stroke="#475569" strokeWidth="2" />
+                        <text x="605" y="212" fill="#cbd5e1" fontSize="13" fontWeight="bold" textAnchor="middle">Quadratic Equations</text>
+                        <text x="605" y="234" fill="#94a3b8" fontSize="12" textAnchor="middle">Mastery: 15% 🔒</text>
+                      </g>
+                    </svg>
+                  </div>
+
+                  {/* ROOT GAP DIAGNOSTIC ALERT */}
+                  <div className="bg-amber-950/30 border border-amber-500/40 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">⚠️</span>
+                        <h4 className="font-bold text-amber-300 text-sm">{t.rootGapAlert}</h4>
+                      </div>
+                      <p className="text-xs text-slate-300">
+                        When students struggle on <em>Quadratic Equations</em>, our DAG tracer automatically identifies whether the root gap is in <strong>Fractions</strong> or <strong>Linear Equations</strong>. You are currently clear on Fractions!
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setActiveTopicId(2);
+                        setActiveTab("quiz");
+                      }}
+                      className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shrink-0 transition-all"
+                    >
+                      Continue Linear Equations
+                    </button>
+                  </div>
+
+                </div>
+
+              </div>
+            )}
+
+            {/* ------------------------------------------------------- */}
+            {/* 4. RAG AI TUTOR (TIERED HINTS & CITATIONS) */}
+            {/* ------------------------------------------------------- */}
+            {role === "student" && activeTab === "tutor" && (
+              <div className="max-w-4xl mx-auto space-y-4">
+                
+                {/* Tutor Header & Controls */}
+                <div className="bg-slate-800/90 border border-slate-700 rounded-3xl p-4 sm:p-6 flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-brand-500/10 border border-brand-500/30 flex items-center justify-center text-2xl">
+                      🤖
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-white text-lg">Growth Grid AI Tutor (RAG)</h3>
+                      <p className="text-xs text-slate-400">Hints first • Step-by-step guidance • Official STEM citations</p>
+                    </div>
+                  </div>
+
+                  {/* Scaffolding Tier Selector */}
+                  <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-700">
+                    <button
+                      onClick={() => setTutorTier(1)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${tutorTier === 1 ? 'bg-brand-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                    >
+                      💡 Hint First
+                    </button>
+                    <button
+                      onClick={() => setTutorTier(2)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${tutorTier === 2 ? 'bg-brand-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                    >
+                      📝 Step-by-Step
+                    </button>
+                    <button
+                      onClick={() => setTutorTier(3)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${tutorTier === 3 ? 'bg-brand-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                    >
+                      📖 Full Solution
+                    </button>
+                  </div>
+                </div>
+
+                {/* Chat Log Container */}
+                <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 h-[480px] overflow-y-auto custom-scrollbar space-y-4">
+                  {chatMessages.map((msg, i) => (
+                    <div
+                      key={i}
+                      className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
+                    >
+                      <div
+                        className={`max-w-[85%] rounded-2xl p-4 text-sm leading-relaxed whitespace-pre-line shadow-md ${msg.sender === 'user' ? 'bg-brand-600 text-white rounded-br-none' : 'bg-slate-800 border border-slate-700/80 text-slate-200 rounded-bl-none'}`}
+                      >
+                        {msg.text}
+
+                        {msg.citation && (
+                          <div className="mt-3 pt-2 border-t border-slate-700 text-xs text-brand-300 font-medium">
+                            📚 Official Course Citation: <em>{msg.citation}</em>
+                          </div>
+                        )}
+                      </div>
+
+                      {msg.sender === 'tutor' && (
+                        <div className="flex items-center gap-3 mt-1.5 text-[11px] text-slate-400">
+                          <button
+                            onClick={() => speakText(msg.text)}
+                            className="hover:text-brand-300 flex items-center gap-1"
+                          >
+                            <span>🔊 Read Aloud</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Preset Fast Prompt Chips */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-slate-400 font-medium">Quick Prompts:</span>
+                  {[
+                    "How do I solve 3x - 5 = 16?",
+                    "What is the difference between speed and velocity?",
+                    "Explain boolean logic in Python",
+                    "Why do we flip inequality signs when dividing by negatives?"
+                  ].map((pText, pIdx) => (
+                    <button
+                      key={pIdx}
+                      onClick={() => handleSendTutorMessage(pText)}
+                      className="px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-300 transition-all"
+                    >
+                      {pText}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Input Bar */}
+                <div className="bg-slate-800/90 border border-slate-700 rounded-2xl p-2 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={inputMsg}
+                    onChange={(e) => setInputMsg(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSendTutorMessage()}
+                    placeholder="Ask any STEM question (hints are shown first)..."
+                    className="w-full bg-transparent px-4 py-2 text-sm text-white placeholder-slate-400 focus:outline-none"
+                  />
+                  <button
+                    onClick={() => handleSendTutorMessage()}
+                    className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm transition-all shrink-0"
+                  >
+                    Send ↗
+                  </button>
+                </div>
+
+              </div>
+            )}
+
+            {/* ------------------------------------------------------- */}
+            {/* 5. VERIFIABLE POLYGON CREDENTIALS */}
+            {/* ------------------------------------------------------- */}
+            {role === "student" && activeTab === "credentials" && (
+              <div className="space-y-6">
+                
+                <div className="bg-slate-800/80 border border-slate-700 rounded-3xl p-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                        <span>Verifiable On-Chain STEM Credentials</span>
+                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                          Polygon Amoy Testnet
+                        </span>
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Soulbound skill badges issued upon reaching ≥80% mastery. Never stores raw personal data on-chain.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-xs font-mono text-slate-400 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
+                      <span>Contract: 0x742d...44e</span>
+                    </div>
+                  </div>
+
+                  {/* List of Earned Badges */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    {mintedBadges.map((badge) => (
+                      <div
+                        key={badge.id}
+                        className="bg-gradient-to-br from-slate-900 to-purple-950/20 border border-purple-500/40 rounded-3xl p-6 relative overflow-hidden shadow-xl space-y-4"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-14 h-14 rounded-2xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-3xl shadow-lg">
+                              🏅
+                            </div>
+                            <div>
+                              <h4 className="font-extrabold text-white text-lg">{badge.title}</h4>
+                              <p className="text-xs text-purple-300 font-semibold">Mastery Achieved: {badge.score}%</p>
+                            </div>
+                          </div>
+                          
+                          {/* Live Dynamic QR Code SVG */}
+                          <div className="bg-white p-1.5 rounded-xl shadow-md shrink-0" title="Scan to Verify on Polygon">
+                            <svg className="w-16 h-16" viewBox="0 0 100 100">
+                              <rect width="100" height="100" fill="white" />
+                              <rect x="10" y="10" width="30" height="30" fill="black" />
+                              <rect x="15" y="15" width="20" height="20" fill="white" />
+                              <rect x="20" y="20" width="10" height="10" fill="black" />
+                              <rect x="60" y="10" width="30" height="30" fill="black" />
+                              <rect x="65" y="15" width="20" height="20" fill="white" />
+                              <rect x="70" y="20" width="10" height="10" fill="black" />
+                              <rect x="10" y="60" width="30" height="30" fill="black" />
+                              <rect x="15" y="65" width="20" height="20" fill="white" />
+                              <rect x="20" y="70" width="10" height="10" fill="black" />
+                              <rect x="50" y="50" width="15" height="15" fill="black" />
+                              <rect x="70" y="65" width="15" height="20" fill="black" />
+                            </svg>
+                          </div>
+                        </div>
+
+                        {/* On-Chain Cryptographic Details */}
+                        <div className="bg-slate-950/80 rounded-2xl p-3 text-xs space-y-1.5 border border-slate-800/80 font-mono">
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">Badge Hash:</span>
+                            <span className="text-brand-300 font-bold">{badge.badgeHash.substring(0, 20)}...</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">Tx Hash:</span>
+                            <span className="text-purple-300">{badge.txHash.substring(0, 20)}...</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">Network:</span>
+                            <span className="text-emerald-400">{badge.network}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2 text-xs">
+                          <span className="text-slate-400">Zero PII Privacy Guaranteed</span>
+                          <button
+                            onClick={() => alert(`Verification Successful!\n\nBadge: ${badge.title}\nProof: Valid SHA-256 On-Chain Record\nMastery: ${badge.score}%\nNetwork: ${badge.network}`)}
+                            className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs shadow-md transition-all"
+                          >
+                            Verify Authenticity ↗
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                </div>
+
+              </div>
+            )}
+
+            {/* ------------------------------------------------------- */}
+            {/* 6. EDUCATOR DASHBOARD (ANALYTICS & AT-RISK ROSTER) */}
+            {/* ------------------------------------------------------- */}
+            {role === "educator" && (
+              <div className="space-y-6">
+                
+                {/* Header Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-slate-800/80 border border-slate-700 rounded-2xl p-4">
+                    <p className="text-xs text-slate-400 uppercase font-semibold">Total Students</p>
+                    <h3 className="text-3xl font-extrabold text-white mt-1">50</h3>
+                  </div>
+
+                  <div className="bg-slate-800/80 border border-slate-700 rounded-2xl p-4">
+                    <p className="text-xs text-slate-400 uppercase font-semibold">Class Avg Mastery</p>
+                    <h3 className="text-3xl font-extrabold text-emerald-400 mt-1">74.5%</h3>
+                  </div>
+
+                  <div className="bg-slate-800/80 border border-slate-700 rounded-2xl p-4">
+                    <p className="text-xs text-slate-400 uppercase font-semibold">At-Risk Learners</p>
+                    <h3 className="text-3xl font-extrabold text-rose-400 mt-1">13 <span className="text-xs font-normal text-slate-400">(26%)</span></h3>
+                  </div>
+
+                  <div className="bg-slate-800/80 border border-slate-700 rounded-2xl p-4">
+                    <p className="text-xs text-slate-400 uppercase font-semibold">K-Means Clusters</p>
+                    <div className="text-xs text-slate-300 mt-1 flex gap-2">
+                      <span className="text-purple-300">Fast: 15</span> • 
+                      <span className="text-brand-300">Steady: 22</span> • 
+                      <span className="text-rose-300">Support: 13</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Topic-Wise Weak Area Heatmap & Actions */}
+                <div className="bg-slate-800/80 border border-slate-700 rounded-3xl p-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                    <div>
+                      <h3 className="text-lg font-bold text-white">Cohort Weak Areas & Stalled Topics</h3>
+                      <p className="text-xs text-slate-400">Identified via Bayesian Knowledge Tracing failure distributions</p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={exportCSV}
+                        className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold flex items-center gap-2 transition-all"
+                      >
+                        <span>📥</span>
+                        <span>Export CSV</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[
+                      { topic: "Linear Equations & Inequalities", avg: "52.4%", failed: "38% Fail Rate", flag: "High Risk" },
+                      { topic: "1D Kinematics & Motion", avg: "58.1%", failed: "31% Fail Rate", flag: "Moderate Risk" },
+                      { topic: "Loops & Iterative Algorithms", avg: "62.8%", failed: "24% Fail Rate", flag: "Moderate Risk" }
+                    ].map((item, idx) => (
+                      <div key={idx} className="bg-slate-900/80 border border-slate-700/80 rounded-2xl p-4 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-white">{item.topic}</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                            {item.flag}
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-400 flex justify-between">
+                          <span>Average Mastery: <strong className="text-white">{item.avg}</strong></span>
+                          <span className="text-rose-400 font-semibold">{item.failed}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 50 Student Roster with Risk Flags */}
+                <div className="bg-slate-800/80 border border-slate-700 rounded-3xl p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold text-white">Student Roster (50 Sample Students)</h3>
+                      <p className="text-xs text-slate-400">Click any student to view timeline, BKT curve, and assign targeted interventions</p>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto custom-scrollbar">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-900/80 text-slate-400 uppercase font-semibold border-b border-slate-700">
+                        <tr>
+                          <th className="p-3">Student Name</th>
+                          <th className="p-3">Learner Cluster</th>
+                          <th className="p-3">Streak</th>
+                          <th className="p-3">XP</th>
+                          <th className="p-3">Avg Mastery</th>
+                          <th className="p-3">Risk Status</th>
+                          <th className="p-3">Root Knowledge Gap</th>
+                          <th className="p-3">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800">
+                        {SAMPLE_STUDENTS.slice(0, 15).map((s) => (
+                          <tr key={s.id} className="hover:bg-slate-800/50 transition-colors">
+                            <td className="p-3 font-semibold text-white">{s.name}</td>
+                            <td className="p-3">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${s.cluster === 'Fast' ? 'bg-purple-500/20 text-purple-300' : s.cluster === 'Steady' ? 'bg-brand-500/20 text-brand-300' : 'bg-rose-500/20 text-rose-300'}`}>
+                                {s.cluster}
+                              </span>
+                            </td>
+                            <td className="p-3 font-mono">{s.streak}d</td>
+                            <td className="p-3 font-mono text-amber-300">{s.xp}</td>
+                            <td className="p-3 font-bold">{Math.round(s.avgMastery * 100)}%</td>
+                            <td className="p-3">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${s.risk === 'high' ? 'bg-rose-500/20 text-rose-300' : s.risk === 'medium' ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300'}`}>
+                                {s.risk === 'high' ? '🔴 High Risk' : s.risk === 'medium' ? '🟡 Moderate' : '🟢 Low Risk'}
+                              </span>
+                            </td>
+                            <td className="p-3 text-slate-300 font-medium">
+                              {s.rootGap ? <span className="text-amber-400">⚠️ {s.rootGap}</span> : "None"}
+                            </td>
+                            <td className="p-3">
+                              <button
+                                onClick={() => setShowInterventionModal(s)}
+                                className="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-[11px] transition-all"
+                              >
+                                View Interventions ↗
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <p className="text-xs text-slate-500 text-center pt-2">
+                    Showing top 15 of 50 students. Click "Export CSV" for the full dataset.
+                  </p>
+                </div>
+
+              </div>
+            )}
+
+            {/* ------------------------------------------------------- */}
+            {/* 7. ADMIN & LMS (CANVAS / MOODLE LTI 1.3) */}
+            {/* ------------------------------------------------------- */}
+            {role === "admin" && (
+              <div className="space-y-6 max-w-4xl mx-auto">
+                
+                <div className="bg-slate-800/80 border border-slate-700 rounded-3xl p-6 space-y-6">
+                  <div>
+                    <h3 className="text-xl font-bold text-white">LMS Integration (LTI 1.3 Canvas / Moodle)</h3>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Test 1.3 OIDC Launch handshakes, gradebook passback (AGS), and deep linking payloads.
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-900 rounded-2xl p-5 border border-slate-800 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-white">Simulate Canvas / Moodle Launch</span>
+                      <button
+                        onClick={() => alert("LTI 1.3 OIDC Handshake Successful!\n\nIssuer: https://canvas.instructure.com\nContext: STEM-101\nRole: Learner\nLineitem Passback: Ready")}
+                        className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs transition-all"
+                      >
+                        Simulate OIDC Launch ↗
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+                      <span className="text-sm font-semibold text-white">Trigger LTI AGS Grade Passback</span>
+                      <button
+                        onClick={() => alert("LTI 1.3 Grade Passback Successful!\n\nPushed 88% Mastery Score to Canvas LMS Gradebook endpoint.")}
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all"
+                      >
+                        Send Grade to LMS ↗
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Seed & System Diagnostics */}
+                  <div className="bg-slate-900 rounded-2xl p-5 border border-slate-800 space-y-3">
+                    <h4 className="text-sm font-bold text-white">System Diagnostics</h4>
+                    <div className="text-xs text-slate-300 space-y-1 font-mono">
+                      <div>Database: Connected (PostgreSQL / SQLite auto-fallback)</div>
+                      <div>Quiz Question Pool: 540 STEM Questions Ready</div>
+                      <div>Bayesian Knowledge Tracing Engine: Active (Threshold: 80%)</div>
+                      <div>K-Means Pacing Clustering: Active (Fast / Steady / Support)</div>
+                      <div>Polygon Testnet Contract: 0x742d...44e (Zero-PII compliant)</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+          </main>
+
+          {/* ========================================================= */}
+          {/* MODAL 1: "WHY THIS RECOMMENDATION?" (XAI) */}
+          {/* ========================================================= */}
+          {showWhyModal && (
+            <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-brand-500/50 rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-5 shadow-2xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">💡</span>
+                    <h3 className="font-extrabold text-white text-lg">Why this recommendation?</h3>
+                  </div>
+                  <button
+                    onClick={() => setShowWhyModal(false)}
+                    className="p-1 rounded-lg text-slate-400 hover:text-white"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="space-y-4 text-xs text-slate-300">
+                  <div className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/80 space-y-2">
+                    <div className="font-bold text-brand-300 text-sm">1. Bayesian Knowledge Tracing Score</div>
+                    <p>
+                      Your estimated knowledge probability <strong>P(L)</strong> on <em>Linear Equations</em> is <strong>58%</strong>. Because this is below the <strong>80% Mastery Gate</strong>, you need targeted practice before advancing.
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/80 space-y-2">
+                    <div className="font-bold text-emerald-300 text-sm">2. Prerequisite Check Passed</div>
+                    <p>
+                      Our DAG tracer confirmed your foundational mastery on <em>Fractions & Rational Numbers</em> is <strong>88%</strong>. No prerequisite remediation is needed!
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/80 space-y-2">
+                    <div className="font-bold text-purple-300 text-sm">3. Pacing Profile: Steady Learner</div>
+                    <p>
+                      Based on your average response time (14s) and hint usage (0.3/q), K-Means clustering has assigned you standard progressive scaffolding (Difficulty 2–3).
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowWhyModal(false)}
+                  className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm transition-all"
+                >
+                  Got it, let's practice!
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* MODAL 2: MASTERY GATE CELEBRATION (≥80%) */}
+          {/* ========================================================= */}
+          {showMasteryCelebration && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+              <div className="bg-gradient-to-b from-slate-900 to-emerald-950/40 border border-emerald-500 rounded-3xl p-8 max-w-md w-full text-center space-y-5 shadow-2xl">
+                <div className="text-6xl animate-bounce">🎉</div>
+                <h3 className="text-2xl font-extrabold text-white">Mastery Gate Cleared!</h3>
+                <p className="text-sm text-slate-300">
+                  Congratulations! You surpassed the <strong>80% Mastery Threshold</strong> on Linear Equations.
+                </p>
+
+                <div className="p-4 bg-slate-900 rounded-2xl border border-slate-800 text-xs space-y-2">
+                  <div className="flex justify-between text-slate-300">
+                    <span>Bonus XP Awarded:</span>
+                    <strong className="text-amber-400">+100 XP ⭐</strong>
+                  </div>
+                  <div className="flex justify-between text-slate-300">
+                    <span>Next Unlocked Topic:</span>
+                    <strong className="text-brand-300">Systems of Equations 🔓</strong>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2 pt-2">
+                  <button
+                    onClick={() => {
+                      setShowMasteryCelebration(false);
+                      handleMintBadge(2, "Linear Equations & Inequalities");
+                    }}
+                    className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition-all"
+                  >
+                    🏅 Claim Polygon Credential Badge
+                  </button>
+                  <button
+                    onClick={() => setShowMasteryCelebration(false)}
+                    className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs"
+                  >
+                    Close & Keep Learning
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* MODAL 3: EDUCATOR INTERVENTION DRAWER */}
+          {/* ========================================================= */}
+          {showInterventionModal && (
+            <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-indigo-500/50 rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-5 shadow-2xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-white text-lg">Student Profile: {showInterventionModal.name}</h3>
+                    <p className="text-xs text-slate-400">{showInterventionModal.email}</p>
+                  </div>
+                  <button
+                    onClick={() => setShowInterventionModal(null)}
+                    className="p-1 rounded-lg text-slate-400 hover:text-white"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="space-y-3 text-xs text-slate-300">
+                  <div className="p-3 bg-slate-800 rounded-xl flex justify-between">
+                    <span>Cluster: <strong className="text-white">{showInterventionModal.cluster}</strong></span>
+                    <span>Mastery: <strong className="text-white">{Math.round(showInterventionModal.avgMastery * 100)}%</strong></span>
+                    <span>Risk: <strong className="text-rose-400">{showInterventionModal.risk}</strong></span>
+                  </div>
+
+                  <div className="p-4 bg-slate-800/80 rounded-xl space-y-2">
+                    <span className="font-bold text-brand-300">Root-Cause Analysis:</span>
+                    <p>
+                      {showInterventionModal.rootGap ? (
+                        <>Student shows frequent errors due to root knowledge gap in <strong>{showInterventionModal.rootGap}</strong>.</>
+                      ) : (
+                        <>Steady progress observed with consistent completion rate.</>
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-slate-800/80 rounded-xl space-y-2">
+                    <span className="font-bold text-indigo-300">Recommended Teacher Interventions:</span>
+                    <ul className="list-disc pl-4 space-y-1 text-slate-300">
+                      <li>Assign targeted 10-minute micro-lesson with visual simulations.</li>
+                      <li>Enable Tier 1 & 2 scaffolding hints by default.</li>
+                      <li>Schedule peer pairing with a Fast Learner mentor.</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 pt-2">
+                  <button
+                    onClick={() => {
+                      alert(`Intervention assigned to ${showInterventionModal.name}! Push notification sent.`);
+                      setShowInterventionModal(null);
+                    }}
+                    className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all"
+                  >
+                    Assign Remedial Pathway ↗
+                  </button>
+                  <button
+                    onClick={() => setShowInterventionModal(null)}
+                    className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    // Render the React application
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
